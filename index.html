@@ -400,9 +400,9 @@ let fsDb = null;
 
 function initCloud(){
   try{
-    const configured = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+    const configured = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY';
     if(configured && typeof firebase !== 'undefined'){
-      firebase.initializeApp(FIREBASE_CONFIG);
+      firebase.initializeApp(firebaseConfig);
       fsDb = firebase.firestore();
       cloudEnabled = true;
     }
