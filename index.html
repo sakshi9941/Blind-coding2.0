@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindCode Arena — College Blind Coding Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BLINDCODE ARENA — DESIGN TOKENS
+   Palette: near-black stage (#0B0E13), spotlight amber (#F2B705),
+   arena cyan (#37D6C6) for secondary state, muted slate text.
+   Type: Space Grotesk for display, Inter for UI body, JetBrains
+   Mono for anything code/data (editor, roll numbers, scores).
+   ============================================================ */
+:root{
+  --stage:#0B0E13;
+  --panel:#12161F;
+  --panel-2:#171C27;
+  --line:#232A38;
+  --text:#E7EAF0;
+  --text-dim:#8A93A6;
+  --amber:#F2B705;
+  --amber-dim:#8a6d0a;
+  --cyan:#37D6C6;
+  --red:#FF5C5C;
+  --green:#4ADE80;
+  --font-display:'Space Grotesk',Inter,system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--stage);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+::selection{background:var(--amber);color:#141414;}
+.hidden{display:none !important;}
+button{font-family:inherit;cursor:pointer;}
+a{color:var(--cyan);}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--stage);}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+
+/* ---------- layout shells ---------- */
+.screen{min-height:100vh;width:100%;}
+.center-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 22px;border-radius:10px;border:1px solid transparent;
+  font-family:var(--font-display);font-weight:600;font-size:15px;
+  letter-spacing:.2px;transition:transform .12s ease, background .15s ease, border-color .15s ease;
+}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--amber);color:#171104;}
+.btn-primary:hover{background:#ffc61a;}
+.btn-outline{background:transparent;color:var(--text);border-color:var(--line);}
+.btn-outline:hover{border-color:var(--amber);color:var(--amber);}
+.btn-cyan{background:var(--cyan);color:#062421;}
+.btn-cyan:hover{background:#54e6d6;}
+.btn-danger{background:transparent;color:var(--red);border-color:#4a2323;}
+.btn-danger:hover{background:rgba(255,92,92,.08);}
+.btn-ghost{background:transparent;color:var(--text-dim);border-color:transparent;}
+.btn-ghost:hover{color:var(--text);}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:8px;}
+.btn-block{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* ---------- form controls ---------- */
+.field{margin-bottom:16px;text-align:left;}
+.field label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-weight:500;letter-spacing:.2px;}
+.field input, .field select, .field textarea{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+  padding:12px 14px;border-radius:9px;font-size:14.5px;font-family:var(--font-body);outline:none;
+  transition:border-color .15s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{border-color:var(--amber);}
+.field textarea{font-family:var(--font-mono);resize:vertical;}
+
+/* ---------- home ---------- */
+.home{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:32px;position:relative;overflow:hidden;
+}
+.home::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242,183,5,.10), transparent 55%),
+    radial-gradient(circle at 85% 90%, rgba(55,214,198,.08), transparent 50%);
+  pointer-events:none;
+}
+.home-mark{font-family:var(--font-mono);color:var(--cyan);font-size:13px;letter-spacing:3px;margin-bottom:18px;opacity:.85;}
+.home h1{
+  font-family:var(--font-display);font-size:clamp(40px,7vw,72px);margin:0;line-height:1.02;
+  color:var(--text);
+}
+.home h1 span{color:var(--amber);}
+.home p.tagline{font-size:17px;color:var(--text-dim);margin:16px 0 6px;max-width:520px;}
+.home p.sub{font-family:var(--font-mono);font-size:13.5px;color:var(--text-dim);max-width:480px;margin:0 0 36px;line-height:1.7;}
+.home-actions{display:flex;gap:16px;position:relative;z-index:1;flex-wrap:wrap;justify-content:center;}
+.home-actions .btn{min-width:190px;padding:16px 26px;font-size:15.5px;}
+.home-foot{margin-top:60px;font-size:12px;color:#4b5262;font-family:var(--font-mono);}
+.home-mascot{position:relative;z-index:1;margin:10px 0 8px;animation:mascot-bob 3s ease-in-out infinite;}
+.home-mascot:hover{animation-play-state:paused;}
+@keyframes mascot-bob{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg);}}
+.sticker{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:110px;height:110px;border-radius:50%;background:#fff;
+  font-size:60px;line-height:1;box-shadow:0 8px 22px rgba(0,0,0,.35), 0 0 0 5px var(--stage), 0 0 0 8px var(--amber);
+}
+.sticker-caption{margin-top:12px;font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text-dim);}
+
+/* ---------- auth cards ---------- */
+.auth-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:36px;width:100%;max-width:400px;position:relative;
+}
+.auth-card .back{position:absolute;top:18px;left:18px;color:var(--text-dim);font-size:13px;text-decoration:none;font-family:var(--font-mono);}
+.auth-card .back:hover{color:var(--amber);}
+.auth-head{text-align:center;margin:10px 0 28px;}
+.auth-head .icon{font-size:30px;margin-bottom:10px;}
+.auth-head h2{font-family:var(--font-display);margin:0 0 6px;font-size:22px;}
+.auth-head p{color:var(--text-dim);font-size:13.5px;margin:0;}
+.auth-hint{margin-top:18px;padding:12px 14px;background:var(--panel-2);border:1px dashed var(--line);border-radius:9px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-align:center;}
+.error-text{color:var(--red);font-size:13px;margin:-6px 0 14px;min-height:16px;}
+
+/* ---------- admin shell ---------- */
+.admin-shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:228px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);
+  padding:22px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.brand{display:flex;align-items:center;gap:9px;padding:6px 10px 22px;font-family:var(--font-display);font-weight:700;font-size:16px;}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber);}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:9px;color:var(--text-dim);
+  font-size:14px;font-weight:500;margin-bottom:3px;transition:background .12s ease,color .12s ease;border:none;background:transparent;width:100%;text-align:left;
+}
+.nav-item:hover{background:var(--panel-2);color:var(--text);}
+.nav-item.active{background:rgba(242,183,5,.10);color:var(--amber);}
+.sidebar-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);}
+.main{flex:1;padding:30px 36px;max-width:100%;overflow-x:hidden;}
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px;}
+.page-head h1{font-family:var(--font-display);font-size:24px;margin:0;}
+.page-head p{color:var(--text-dim);font-size:13.5px;margin:4px 0 0;}
+
+/* ---------- cards / grid ---------- */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:28px;}
+.stat-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:18px 20px;}
+.stat-card .label{font-size:12px;color:var(--text-dim);text-transform:none;margin-bottom:8px;}
+.stat-card .value{font-family:var(--font-display);font-size:28px;font-weight:600;}
+.stat-card .value.amber{color:var(--amber);}
+.stat-card .value.cyan{color:var(--cyan);}
+.panel-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:20px;}
+.panel-card h3{font-family:var(--font-display);font-size:16px;margin:0 0 4px;}
+.panel-card .desc{color:var(--text-dim);font-size:13px;margin:0 0 16px;}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;color:var(--text-dim);font-weight:500;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
+td{padding:11px 12px;border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+.table-wrap{overflow-x:auto;}
+.pill{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11.5px;font-weight:600;font-family:var(--font-mono);}
+.pill-easy{background:rgba(74,222,128,.12);color:var(--green);}
+.pill-medium{background:rgba(242,183,5,.14);color:var(--amber);}
+.pill-hard{background:rgba(255,92,92,.14);color:var(--red);}
+.pill-ok{background:rgba(74,222,128,.12);color:var(--green);}
+.pill-warn{background:rgba(242,183,5,.14);color:var(--amber);}
+.pill-bad{background:rgba(255,92,92,.14);color:var(--red);}
+.mono{font-family:var(--font-mono);}
+
+/* question list/form */
+.q-item{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);gap:14px;}
+.q-item:last-child{border-bottom:none;}
+.q-item .qtitle{font-weight:600;font-size:14.5px;margin-bottom:4px;}
+.q-item .qmeta{color:var(--text-dim);font-size:12.5px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:640px){.form-row{grid-template-columns:1fr;}}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(6,7,10,.72);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;backdrop-filter:blur(2px);}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:26px;max-width:440px;width:100%;}
+.modal h3{font-family:var(--font-display);margin:0 0 10px;font-size:17px;}
+.modal p{color:var(--text-dim);font-size:13.5px;line-height:1.6;margin:0 0 20px;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+
+/* toast */
+#toast-region{position:fixed;top:18px;right:18px;z-index:400;display:flex;flex-direction:column;gap:10px;max-width:320px;}
+.toast{
+  background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:9px;padding:13px 16px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  animation:toast-in .18s ease;
+}
+.toast.warn{border-left-color:var(--red);}
+.toast.good{border-left-color:var(--green);}
+@keyframes toast-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.toast strong{display:block;margin-bottom:2px;font-family:var(--font-display);font-size:13px;}
+
+/* ---------- student join ---------- */
+.join-wrap{max-width:420px;}
+
+/* ---------- contest intro ---------- */
+.intro-card{max-width:560px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:38px;text-align:center;}
+.intro-card .badge{display:inline-block;font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:var(--cyan);border:1px solid #1f3d3a;background:rgba(55,214,198,.08);padding:5px 12px;border-radius:100px;margin-bottom:18px;}
+.intro-card h2{font-family:var(--font-display);font-size:26px;margin:0 0 10px;}
+.intro-list{text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:18px 20px;margin:22px 0;font-size:13.5px;line-height:2;color:var(--text-dim);}
+.intro-list b{color:var(--text);}
+
+/* countdown */
+.countdown-wrap{position:fixed;inset:0;background:#05070a;display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;}
+.countdown-num{font-family:var(--font-display);font-size:130px;color:var(--amber);font-weight:700;text-shadow:0 0 40px rgba(242,183,5,.5);}
+.countdown-label{font-family:var(--font-mono);color:var(--text-dim);letter-spacing:3px;margin-top:6px;font-size:13px;}
+
+/* ---------- contest workspace ---------- */
+.contest-shell{display:flex;flex-direction:column;min-height:100vh;}
+.cw-top{
+  display:flex;align-items:center;justify-content:space-between;padding:14px 26px;
+  border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap;gap:10px;
+}
+.cw-top .who{font-size:13px;color:var(--text-dim);}
+.cw-top .who b{color:var(--text);font-family:var(--font-mono);}
+.timer-box{
+  font-family:var(--font-mono);font-size:20px;font-weight:700;padding:8px 18px;border-radius:9px;
+  background:var(--panel-2);border:1px solid var(--line);letter-spacing:1px;
+}
+.timer-box.warn{color:var(--red);border-color:#4a2323;background:rgba(255,92,92,.08);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+.progress-strip{display:flex;gap:6px;padding:12px 26px;background:var(--stage);flex-wrap:wrap;}
+.progress-dot{
+  font-family:var(--font-mono);font-size:12px;padding:6px 12px;border-radius:100px;border:1px solid var(--line);
+  color:var(--text-dim);
+}
+.progress-dot.done{border-color:#2c4a2f;background:rgba(74,222,128,.09);color:var(--green);}
+.progress-dot.current{border-color:var(--amber);color:var(--amber);background:rgba(242,183,5,.08);}
+
+.cw-body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;}
+@media(max-width:900px){.cw-body{grid-template-columns:1fr;}}
+.q-pane{padding:26px 30px;border-right:1px solid var(--line);overflow-y:auto;}
+@media(max-width:900px){.q-pane{border-right:none;border-bottom:1px solid var(--line);}}
+.q-pane .qnum{font-family:var(--font-mono);color:var(--cyan);font-size:12.5px;letter-spacing:1.5px;margin-bottom:10px;}
+.q-pane h2{font-family:var(--font-display);font-size:21px;margin:0 0 6px;}
+.q-pane .q-desc{color:var(--text-dim);font-size:14.5px;line-height:1.7;margin:14px 0 20px;}
+.q-pane .q-marks{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);margin-bottom:18px;}
+.q-pane .q-marks b{color:var(--amber);}
+.blind-banner{
+  display:flex;align-items:center;gap:10px;background:rgba(242,183,5,.08);border:1px solid var(--amber-dim);
+  color:var(--amber);border-radius:10px;padding:12px 15px;font-size:13px;margin-bottom:18px;
+}
+.editor-pane{display:flex;flex-direction:column;padding:26px 30px;position:relative;}
+.editor-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.editor-toolbar .warn-count{font-family:var(--font-mono);font-size:12px;color:var(--red);}
+.code-frame{position:relative;flex:1;min-height:320px;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#0A0D12;}
+#codeArea, .code-view-area{
+  width:100%;height:100%;min-height:320px;background:#0A0D12;color:#D7F9C7;border:none;outline:none;
+  font-family:var(--font-mono);font-size:14px;line-height:1.6;padding:16px 16px 16px 54px;resize:none;
+  tab-size:4;white-space:pre;
+}
+.line-gutter{
+  position:absolute;top:0;left:0;bottom:0;width:44px;background:#080a0e;color:#3a4150;
+  font-family:var(--font-mono);font-size:13px;line-height:1.6;padding:16px 0;text-align:right;padding-right:9px;
+  user-select:none;overflow:hidden;
+}
+.blind-overlay{
+  position:absolute;inset:0;background:repeating-linear-gradient(135deg,#14171e,#14171e 14px,#191d26 14px,#191d26 28px);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:5;
+}
+.blind-overlay .eye{font-size:34px;}
+.blind-overlay p{font-family:var(--font-mono);color:#5c6478;font-size:13px;letter-spacing:1px;margin:0;text-align:center;padding:0 20px;}
+.editor-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.editor-actions .spacer{flex:1;}
+
+/* result screen */
+.result-wrap{max-width:640px;width:100%;}
+.result-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px;text-align:center;}
+.result-score{font-family:var(--font-display);font-size:56px;font-weight:700;color:var(--amber);margin:10px 0 4px;}
+.result-score span{font-size:24px;color:var(--text-dim);}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0;}
+.result-grid .rg-item{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px 10px;}
+.result-grid .rg-item .rv{font-family:var(--font-mono);font-size:18px;font-weight:700;}
+.result-grid .rg-item .rl{font-size:11px;color:var(--text-dim);margin-top:3px;}
+.feedback-list{text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:16px 18px;margin:20px 0;font-size:13.5px;line-height:2;}
+.feedback-list .ok{color:var(--green);}
+.feedback-list .no{color:var(--red);}
+
+/* leaderboard */
+.rank-1{color:#FFD34D;font-weight:700;}
+.rank-2{color:#C9CFDA;font-weight:700;}
+.rank-3{color:#D89B5A;font-weight:700;}
+
+/* small helpers */
+.text-dim{color:var(--text-dim);}
+.mt-0{margin-top:0;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:13.5px;}
+.chk-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chk-tag{font-family:var(--font-mono);font-size:11px;background:var(--panel-2);border:1px solid var(--line);padding:2px 8px;border-radius:6px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<div id="toast-region"></div>
+
+<!-- ============================================================
+     APP ROOT — everything below is swapped via renderView()
+     ============================================================ -->
+<div id="app"></div>
+
+<!-- Firebase (Firestore) — powers the shared, cross-device online database.
+     Loaded here so it's ready before the app script below runs.
+     If FIREBASE_CONFIG in the script is left as placeholders, the app
+     falls back automatically to local-only (browser) storage. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ================================================================
+   BLINDCODE ARENA
+   Single-file client-side prototype for an internal college
+   Blind Coding Round. Everything — HTML rendering, styling hooks,
+   evaluation engine, anti-cheat tracking, storage — lives in this
+   one script.
+
+   IMPORTANT (read this before extending):
+   There is no real compiler here. evaluateCode() is a heuristic,
+   rule-based, client-side checker that looks for structure,
+   required keywords and expected logic patterns in the submitted
+   text. It is deliberately isolated behind a single function so a
+   real compiler/judge API (e.g. running gcc in a sandboxed
+   container) can be swapped in later — see "PLUGGING IN A REAL
+   COMPILER" near evaluateCode().
+   ================================================================ */
+
+/* ---------------------------------------------------------------
+   0. CLOUD SYNC (Firestore) — the real, shared, online database
+   ---------------------------------------------------------------
+   This is what makes data survive refreshes/reboots AND appear the
+   same for every student on every laptop, with no login required.
+
+   ONE-TIME SETUP FOR THE EVENT ORGANIZER (free, ~5 minutes):
+   1. Go to https://console.firebase.google.com → "Add project" (free).
+   2. In the project: Build → Firestore Database → Create database →
+      choose "Start in test mode" → pick any location → Enable.
+   3. Click the gear icon → Project settings → scroll to "Your apps" →
+      click the web icon (</>) → register an app (any nickname) →
+      copy the "firebaseConfig" object it shows you.
+   4. Paste those 6 values into FIREBASE_CONFIG below, replacing the
+      placeholders. Save this file.
+   5. Back in Firestore → Rules tab, paste this and click Publish:
+
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /questions/{id}    { allow read, write: if true; }
+            match /students/{id}     { allow read, write: if true; }
+            match /submissions/{id}  { allow read, write: if true; }
+            match /contest/{id}      { allow read, write: if true; }
+          }
+        }
+
+   SECURITY NOTE: because students join with no account, these rules
+   have to allow open read/write on just these four collections —
+   anyone with a link to this file (or these config values) could
+   technically read or edit contest data. That's an acceptable
+   trade-off for a low-stakes internal college event; don't reuse this
+   Firebase project for anything sensitive, and just make a fresh
+   project next time if you want a clean slate.
+
+   If you skip this setup, the app still works — it just falls back
+   to this browser's local storage only (a banner in the Admin
+   Dashboard tells you which mode you're in).
+   --------------------------------------------------------------- */
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBS0lUrFy98RyjDUWuwXs_XknLhGPxywIQ",
+
+  authDomain: "blind-coding-1f903.firebaseapp.com",
+
+  projectId: "blind-coding-1f903",
+
+  storageBucket: "blind-coding-1f903.firebasestorage.app",
+
+  messagingSenderId: "608455495156",
+
+  appId: "1:608455495156:web:063f626e590aef7bd0fda1",
+
+  measurementId: "G-07RB73VZYV"
+
+};
+
+
+let cloudEnabled = false;
+let fsDb = null;
+
+function initCloud(){
+  try{
+    const configured = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+    if(configured && typeof firebase !== 'undefined'){
+      firebase.initializeApp(FIREBASE_CONFIG);
+      fsDb = firebase.firestore();
+      cloudEnabled = true;
+    }
+  }catch(e){
+    console.warn('Firebase init failed — running in local-only mode.', e);
+    cloudEnabled = false;
+  }
+}
+
+// Push helpers: fire-and-forget writes to Firestore. Local storage
+// (below) is always updated first and immediately, so the UI never
+// waits on the network — these just replicate the change to the cloud.
+function cloudPushQuestion(q){
+  if(!cloudEnabled) return;
+  fsDb.collection('questions').doc(q.id).set(q)
+    .catch(()=>toast('Sync error','Question saved locally, but could not reach the cloud.','warn'));
+}
+function cloudDeleteQuestion(id){
+  if(!cloudEnabled) return;
+  fsDb.collection('questions').doc(id).delete().catch(()=>{});
+}
+function cloudPushContest(c){
+  if(!cloudEnabled) return;
+  fsDb.collection('contest').doc('config').set(c)
+    .catch(()=>toast('Sync error','Settings saved locally, but could not reach the cloud.','warn'));
+}
+function cloudPushStudent(s){
+  if(!cloudEnabled) return;
+  fsDb.collection('students').doc(s.id).set(s).catch(()=>{});
+}
+function cloudDeleteStudent(id){
+  if(!cloudEnabled) return;
+  fsDb.collection('students').doc(id).delete().catch(()=>{});
+}
+function cloudDeleteSubmission(studentId, questionId){
+  if(!cloudEnabled) return;
+  fsDb.collection('submissions').doc(studentId + '_' + questionId).delete().catch(()=>{});
+}
+function cloudPushSubmission(sub){
+  if(!cloudEnabled) return;
+  fsDb.collection('submissions').doc(sub.studentId + '_' + sub.questionId).set(sub)
+    .catch(()=>toast('Sync error','Submission saved locally, but could not reach the cloud.','warn'));
+}
+async function cloudResetAll(){
+  if(!cloudEnabled) return;
+  try{
+    for(const col of ['questions','students','submissions']){
+      const snap = await fsDb.collection(col).get();
+      const batch = fsDb.batch();
+      snap.forEach(doc=>batch.delete(doc.ref));
+      await batch.commit();
+    }
+  }catch(e){ console.warn('Cloud reset failed', e); }
+}
+
+// Live listeners are split in two:
+//  - "public" ones (questions, contest settings) are safe and useful
+//    for every browser, so every student gets them.
+//  - "admin" ones (students, submissions) only attach after a
+//    successful admin login. Students never need a live feed of
+//    everyone else's data, and there's no reason a student's browser
+//    should be holding an open real-time subscription to every other
+//    student's submitted code and scores — this keeps that data out
+//    of reach unless you're signed in as admin, and cuts the number
+//    of live connections roughly in half during a large event.
+let publicListenersReady = false;
+let adminListenersReady = false;
+
+function safeRerender(){
+  // don't yank a student out from under themselves mid-question
+  if(state.view === 'contest' || state.view === 'countdown') return;
+  render();
+}
+
+function attachPublicCloudListeners(){
+  if(!cloudEnabled || publicListenersReady) return;
+  publicListenersReady = true;
+
+  fsDb.collection('questions').onSnapshot(snap=>{
+    if(!snap.empty){ dbSet(DB_KEYS.questions, snap.docs.map(d=>d.data())); safeRerender(); }
+  }, e=>console.warn('questions sync error', e));
+
+  fsDb.collection('contest').doc('config').onSnapshot(doc=>{
+    if(doc.exists){ dbSet(DB_KEYS.contest, doc.data()); safeRerender(); }
+  }, e=>console.warn('contest sync error', e));
+}
+
+function attachAdminCloudListeners(){
+  if(!cloudEnabled || adminListenersReady) return;
+  adminListenersReady = true;
+
+  fsDb.collection('students').onSnapshot(snap=>{
+    dbSet(DB_KEYS.students, snap.docs.map(d=>d.data())); safeRerender();
+  }, e=>console.warn('students sync error', e));
+
+  fsDb.collection('submissions').onSnapshot(snap=>{
+    dbSet(DB_KEYS.submissions, snap.docs.map(d=>d.data())); safeRerender();
+  }, e=>console.warn('submissions sync error', e));
+}
+
+/* ---------------------------------------------------------------
+   1. STORAGE LAYER (browser-local cache — always the fast path;
+      mirrored to/from Firestore above when cloud sync is on)
+   --------------------------------------------------------------- */
+const DB_KEYS = {
+  questions: 'bca_questions',
+  contest:   'bca_contest',
+  students:  'bca_students',
+  submissions: 'bca_submissions',
+  session:   'bca_session'   // not persisted across true logout, but survives refresh
+};
+
+function dbGet(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function dbSet(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function uid(prefix){
+  return prefix + '_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+}
+
+/* ---------------------------------------------------------------
+   2. DEFAULT DATA (seeded once, on first run)
+   --------------------------------------------------------------- */
+const DEFAULT_QUESTIONS = [
+  {
+    id:'q1', order:1, type:'evenodd',
+    title:'Even or Odd',
+    description:'Write a C program that reads an integer and prints whether it is Even or Odd.',
+    maxMarks:20, difficulty:'Easy',
+    requiredKeywords:['#include','main','scanf','if','printf'],
+    expectedLogic:'Use the modulus operator (%) to check divisibility by 2.'
+  },
+  {
+    id:'q2', order:2, type:'prime',
+    title:'Prime Number',
+    description:'Write a C program that reads an integer and prints whether it is Prime or Not Prime.',
+    maxMarks:20, difficulty:'Medium',
+    requiredKeywords:['#include','main','scanf','for','if','printf'],
+    expectedLogic:'Loop from 2 to n-1 (or sqrt(n)) and use % to test for a factor.'
+  },
+  {
+    id:'q3', order:3, type:'palindrome',
+    title:'Palindrome Number',
+    description:'Write a C program that reads an integer and prints whether it is a Palindrome.',
+    maxMarks:20, difficulty:'Medium',
+    requiredKeywords:['#include','main','scanf','while','printf'],
+    expectedLogic:'Reverse the number using % and / inside a while loop, then compare with the original.'
+  },
+  {
+    id:'q4', order:4, type:'factorial',
+    title:'Factorial',
+    description:'Write a C program that reads an integer n and prints its factorial (n!).',
+    maxMarks:20, difficulty:'Easy',
+    requiredKeywords:['#include','main','scanf','for','printf'],
+    expectedLogic:'Multiply a running result variable by i inside a for loop from 1 to n.'
+  },
+  {
+    id:'q5', order:5, type:'fibonacci',
+    title:'Fibonacci Series',
+    description:'Write a C program that reads n and prints the first n terms of the Fibonacci series.',
+    maxMarks:20, difficulty:'Hard',
+    requiredKeywords:['#include','main','scanf','for','printf'],
+    expectedLogic:'Track two previous terms and add them in a loop to generate the next term.'
+  }
+];
+
+const DEFAULT_CONTEST = {
+  code:'BC2026',
+  name:'BlindCode Arena — Demo Contest',
+  active:true,
+  timePerQuestion:600,      // seconds, 10 min
+  blindMode:true,
+  allowShowCode:false,
+  autoDisqualifyOnWarnings:false,
+  questionIds:['q1','q2','q3','q4','q5']
+};
+
+function seedIfEmpty(){
+  if(!localStorage.getItem(DB_KEYS.questions)) dbSet(DB_KEYS.questions, DEFAULT_QUESTIONS);
+  if(!localStorage.getItem(DB_KEYS.contest)) dbSet(DB_KEYS.contest, DEFAULT_CONTEST);
+  if(!localStorage.getItem(DB_KEYS.students)) dbSet(DB_KEYS.students, []);
+  if(!localStorage.getItem(DB_KEYS.submissions)) dbSet(DB_KEYS.submissions, []);
+}
+seedIfEmpty();
+initCloud();
+if(cloudEnabled){
+  attachPublicCloudListeners();
+  if(isAdminLoggedIn()) attachAdminCloudListeners();
+  // Seed the cloud the first time it's ever connected (won't overwrite
+  // existing cloud data — onSnapshot above will correct local state
+  // if the cloud already has questions/contest data of its own).
+  fsDb.collection('questions').get().then(snap=>{
+    if(snap.empty) DEFAULT_QUESTIONS.forEach(cloudPushQuestion);
+  });
+  fsDb.collection('contest').doc('config').get().then(doc=>{
+    if(!doc.exists) cloudPushContest(DEFAULT_CONTEST);
+  });
+}
+
+/* ---------------------------------------------------------------
+   3. APP STATE (in-memory, not persisted — session bits are)
+   --------------------------------------------------------------- */
+let state = {
+  view:'home',              // home | adminLogin | adminPanel | studentJoin | contestIntro | countdown | contest | result
+  adminTab:'dashboard',     // dashboard|questions|students|submissions|leaderboard|settings
+  currentStudent:null,      // {id,name,roll,contestCode,joinedAt}
+  currentQuestionIndex:0,
+  answers:{},                // questionId -> code string (kept even while hidden)
+  qStatus:{},                 // questionId -> 'done' | undefined
+  questionTimeLeft:{},        // questionId -> seconds remaining (persists across revisits)
+  warnings:{tabSwitches:0, blurCount:0, fullscreenExits:0, copy:0, paste:0, cut:0},
+  blindActive:false,
+  showCodeUnlocked:false,
+  timerSeconds:0,
+  timerHandle:null,
+  questionStartedAt:null,
+  contestQuestions:[],
+  lastResult:null,
+  editingQuestionId:null
+};
+
+function setState(patch){
+  const prevView = state.view;
+  state = Object.assign({}, state, patch);
+  if(patch.view && patch.view !== prevView){
+    pushViewHistory(patch.view);
+  }
+  render();
+}
+
+/* ---------------------------------------------------------------
+   3b. IN-APP HISTORY (makes the browser Back button navigate
+   within the app instead of leaving/closing the page)
+   --------------------------------------------------------------- */
+const NAVIGABLE_BY_BACK = ['home','adminLogin','adminPanel','studentJoin','contestIntro','result','myCodes'];
+
+function pushViewHistory(view){
+  try{ history.pushState({view}, '', '#'+view); }catch(e){}
+}
+
+window.addEventListener('popstate', (e)=>{
+  // Mid-contest, Back must not be able to exit or rewind the round —
+  // force the student to stay put and use Previous/Next/Submit instead.
+  if(state.view === 'contest' || state.view === 'countdown'){
+    pushViewHistory(state.view);
+    toast('Locked', "You can't leave the coding round using Back — use Previous / Next / Submit.", 'warn');
+    return;
+  }
+  const target = (e.state && e.state.view) || 'home';
+  // Never let Back resume a live/finished contest view directly —
+  // that state (timer, current question) can't be safely replayed.
+  const safeTarget = NAVIGABLE_BY_BACK.includes(target) ? target : 'home';
+  state = Object.assign({}, state, {view: safeTarget});
+  render();
+});
+
+/* ---------------------------------------------------------------
+   4. TOASTS
+   --------------------------------------------------------------- */
+function toast(title, msg, kind){
+  const region = document.getElementById('toast-region');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.innerHTML = '<strong>' + escapeHtml(title) + '</strong>' + (msg ? escapeHtml(msg) : '');
+  region.appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 3400);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+/* ================================================================
+   5. SCORING ENGINE
+   ================================================================ */
+
+function stripComments(code){
+  // remove /* */ block comments and // line comments
+  return code.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/\/\/.*$/gm,' ');
+}
+
+function isOnlyPunctuationOrGibberish(cleanCode){
+  // no C-relevant tokens at all: no braces, no semicolons, no known keywords
+  const hasBrace = /[{}]/.test(cleanCode);
+  const hasSemi = /;/.test(cleanCode);
+  const hasKeyword = /\b(include|main|int|float|char|if|for|while|return|printf|scanf|void)\b/.test(cleanCode);
+  return !hasBrace && !hasSemi && !hasKeyword;
+}
+
+/* Question-type-specific logic detectors.
+   Each returns {passed, total, tags:[{ok,label}]} */
+function checkTypeLogic(type, code){
+  const c = code;
+  const tags = [];
+  function has(re, label){ const ok = re.test(c); tags.push({ok, label}); return ok; }
+
+  if(type === 'evenodd'){
+    const a = has(/%/, 'Modulus operator (%) detected');
+    const b = has(/\b2\b/, 'Divisor 2 detected');
+    const d = has(/\bif\s*\(/, 'if condition detected');
+    return {passed:[a,b,d].filter(Boolean).length, total:3, tags};
+  }
+  if(type === 'prime'){
+    const a = has(/%/, 'Modulus operator (%) detected');
+    const b = has(/\bfor\s*\(/, 'for loop detected');
+    const d = has(/\bif\s*\(/, 'if condition detected');
+    return {passed:[a,b,d].filter(Boolean).length, total:3, tags};
+  }
+  if(type === 'palindrome'){
+    const a = has(/%/, 'Modulus operator (%) detected');
+    const b = has(/\//, 'Division operator (/) detected');
+    const d = has(/\bwhile\s*\(/, 'while loop detected');
+    const e = has(/\b(rev|reverse|temp|rem)\w*\b/i, 'Reverse/temp variable detected');
+    return {passed:[a,b,d,e].filter(Boolean).length, total:4, tags};
+  }
+  if(type === 'factorial'){
+    const a = has(/\bfor\s*\(/, 'for loop detected');
+    const b = has(/\*/, 'Multiplication operator (*) detected');
+    return {passed:[a,b].filter(Boolean).length, total:2, tags};
+  }
+  if(type === 'fibonacci'){
+    const a = has(/\bfor\s*\(/, 'for loop detected');
+    const b = has(/\+/, 'Addition operator (+) detected');
+    const d = has(/\b(a|b|c|n1|n2|next|prev|first|second)\w*\s*=/i, 'Series variables detected');
+    return {passed:[a,b,d].filter(Boolean).length, total:3, tags};
+  }
+  // generic fallback for custom admin-created questions
+  const a = has(/[{}]/, 'Braces detected');
+  const b = has(/;/, 'Statement terminators detected');
+  return {passed:[a,b].filter(Boolean).length, total:2, tags};
+}
+
+/*
+  evaluateCode(code, question) -> {
+    score, maxMarks, status, passedChecks, totalChecks, feedback:[{ok,label}]
+  }
+
+  PLUGGING IN A REAL COMPILER LATER:
+  Replace the body of this function with a call to a real judge
+  (e.g. POST the code + test cases to a sandboxed gcc runner) and
+  map its pass/fail test-case results onto the same return shape.
+  Everything else in the app (submission flow, leaderboard,
+  admin results) only depends on this return shape, not on how
+  it was produced.
+*/
+function evaluateCode(code, question){
+  const maxMarks = question.maxMarks || 20;
+  const scale = maxMarks / 20; // scoring rubric below is designed for a 20-mark base
+  const feedback = [];
+  let passedChecks = 0;
+  let totalChecks = 8;
+
+  const trimmed = (code || '').trim();
+
+  // Rule 1 — empty code
+  if(trimmed === ''){
+    return {score:0, maxMarks, status:'No Code Submitted', passedChecks:0, totalChecks, feedback:[
+      {ok:false,label:'No code was written'}
+    ]};
+  }
+
+  const clean = stripComments(code).trim();
+
+  // Rule 2 — only comments
+  if(clean === ''){
+    return {score:0, maxMarks, status:'No Meaningful Code', passedChecks:0, totalChecks, feedback:[
+      {ok:false,label:'Only comments were submitted, no executable code'}
+    ]};
+  }
+
+  // Rule 3 — meaningless / gibberish text
+  if(isOnlyPunctuationOrGibberish(clean)){
+    return {score:0, maxMarks, status:'Meaningless Code', passedChecks:0, totalChecks, feedback:[
+      {ok:false,label:'Submission does not contain recognizable C syntax'}
+    ]};
+  }
+
+  let score = 0;
+
+  // ---- Meaningful code: 2 marks ----
+  const meaningful = clean.length > 5;
+  if(meaningful){ score += 2; passedChecks++; }
+  feedback.push({ok:meaningful, label:'Meaningful code written'});
+
+  // ---- Basic C structure: 3 marks (#include, main, braces) ----
+  const hasInclude = /#include/.test(clean);
+  const hasMain = /\bmain\s*\(/.test(clean);
+  const hasBraces = /\{[\s\S]*\}/.test(clean);
+  const structureScore = [hasInclude, hasMain, hasBraces].filter(Boolean).length;
+  score += (structureScore / 3) * 3;
+  if(structureScore >= 2) passedChecks++;
+  feedback.push({ok:hasInclude, label:'#include header detected'});
+  feedback.push({ok:hasMain, label:'main() function detected'});
+  feedback.push({ok:hasBraces, label:'Balanced braces { } detected'});
+
+  // ---- Syntax: 3 marks (semicolons present on statement-like lines) ----
+  const statementLines = clean.split('\n').filter(l => /[A-Za-z0-9]/.test(l) && !/^\s*[{}]\s*$/.test(l) && !/#include|#define/.test(l));
+  const semiLines = statementLines.filter(l => l.includes(';'));
+  const semiRatio = statementLines.length ? (semiLines.length / statementLines.length) : 0;
+  const syntaxOk = semiRatio >= 0.4;
+  score += semiRatio * 3;
+  if(syntaxOk) passedChecks++;
+  feedback.push({ok:syntaxOk, label:'Semicolon-terminated statements detected'});
+
+  // ---- Input detected (scanf) — informational, folds into logic score ----
+  const hasInput = /\bscanf\s*\(/.test(clean);
+  feedback.push({ok:hasInput, label:'Input (scanf) detected'});
+  if(hasInput) passedChecks++;
+
+  // ---- Required keywords from question ----
+  const reqKeywords = question.requiredKeywords || [];
+  const keywordHits = reqKeywords.filter(k => clean.toLowerCase().includes(k.toLowerCase()));
+  const keywordRatio = reqKeywords.length ? keywordHits.length / reqKeywords.length : 1;
+
+  // ---- Required logic (question-type specific): 7 marks ----
+  const logic = checkTypeLogic(question.type, clean);
+  const logicRatio = logic.total ? logic.passed / logic.total : 0;
+  const combinedLogicRatio = (logicRatio * 0.7) + (keywordRatio * 0.3);
+  score += combinedLogicRatio * 7;
+  if(logicRatio >= 0.5) passedChecks++;
+  logic.tags.forEach(t => feedback.push({ok:t.ok, label:t.label}));
+
+  // ---- Test/logic simulation checks: 5 marks ----
+  // Reward when structure + logic + output all line up (proxy for
+  // "would likely pass hidden test cases" without a real compiler).
+  const hasOutput = /\bprintf\s*\(/.test(clean);
+  feedback.push({ok:hasOutput, label:'Output (printf) statement detected'});
+  const testScore = ((hasOutput?1:0) + (structureScore>=2?1:0) + (logicRatio>=0.66?1:0)) / 3;
+  score += testScore * 5;
+  if(testScore >= 0.66) passedChecks++;
+
+  // clamp + scale to question's max marks
+  score = Math.max(0, Math.min(20, score));
+  score = Math.round(score * scale);
+
+  totalChecks = feedback.length;
+  passedChecks = feedback.filter(f=>f.ok).length;
+
+  let status = 'Needs Improvement';
+  if(score >= maxMarks * 0.9) status = 'Accepted';
+  else if(score >= maxMarks * 0.5) status = 'Partially Correct';
+  else if(score > 0) status = 'Mostly Incorrect';
+  else status = 'No Marks Awarded';
+
+  return {score, maxMarks, status, passedChecks, totalChecks, feedback};
+}
+
+/* ================================================================
+   6. ADMIN AUTH
+   ================================================================ */
+const ADMIN_CREDS = {username:'admin', password:'admin123'};
+
+function loginAdmin(username, password){
+  if(username === ADMIN_CREDS.username && password === ADMIN_CREDS.password){
+    sessionStorage.setItem('bca_admin', '1');
+    if(cloudEnabled) attachAdminCloudListeners();
+    setState({view:'adminPanel', adminTab:'dashboard'});
+    toast('Welcome back', 'Signed in as admin', 'good');
+    return true;
+  }
+  return false;
+}
+function logoutAdmin(){
+  sessionStorage.removeItem('bca_admin');
+  setState({view:'home'});
+}
+function isAdminLoggedIn(){ return sessionStorage.getItem('bca_admin') === '1'; }
+
+/* ================================================================
+   7. STUDENT FLOW
+   ================================================================ */
+function joinContest(name, roll, contestCode){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  if(!name.trim() || !roll.trim()){
+    return {ok:false, error:'Please enter your name and roll number.'};
+  }
+  if(contestCode.trim().toUpperCase() !== contest.code.toUpperCase()){
+    return {ok:false, error:'Invalid contest code. Please check with your event coordinator.'};
+  }
+  if(!contest.active){
+    return {ok:false, error:'This contest is not currently active.'};
+  }
+
+  // Block re-attempts: once a Roll No. has completed & submitted this
+  // contest code, the same credentials can't be used to start it again.
+  const rollKey = roll.trim().toLowerCase();
+  const codeKey = contest.code.trim().toUpperCase();
+  const students = dbGet(DB_KEYS.students, []);
+  const alreadyCompleted = students.find(s =>
+    s.completed && s.roll.trim().toLowerCase() === rollKey && s.contestCode.trim().toUpperCase() === codeKey
+  );
+  if(alreadyCompleted){
+    return {ok:false, error:'You have already submitted this test with this Roll No. It cannot be attempted again.'};
+  }
+
+  const student = {
+    id:uid('stu'), name:name.trim(), roll:roll.trim(),
+    contestCode:contest.code, joinedAt:Date.now(), completed:false
+  };
+  students.push(student);
+  dbSet(DB_KEYS.students, students);
+  cloudPushStudent(student);
+
+  const questions = dbGet(DB_KEYS.questions, []);
+  const contestQuestions = contest.questionIds
+    .map(id => questions.find(q=>q.id===id))
+    .filter(Boolean)
+    .sort((a,b)=>a.order-b.order);
+
+  setState({
+    view:'contestIntro',
+    currentStudent:student,
+    contestQuestions,
+    currentQuestionIndex:0,
+    answers:{},
+    qStatus:{},
+    questionTimeLeft:{},
+    warnings:{tabSwitches:0, blurCount:0, fullscreenExits:0, copy:0, paste:0, cut:0},
+    blindActive:false,
+    showCodeUnlocked:false
+  });
+  return {ok:true};
+}
+
+function startContest(){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  if(contest.blindMode){
+    setState({view:'countdown'});
+    let n = 3;
+    const tick = () => {
+      const el = document.getElementById('countdownNum');
+      if(el) el.textContent = n;
+      n--;
+      if(n < 0){
+        setState({view:'contest', blindActive:true});
+        beginQuestionTimer();
+        return;
+      }
+      setTimeout(tick, 1000);
+    };
+    setTimeout(tick, 700);
+  } else {
+    setState({view:'contest', blindActive:false});
+    beginQuestionTimer();
+  }
+}
+
+function currentQuestion(){
+  return state.contestQuestions[state.currentQuestionIndex];
+}
+
+function beginQuestionTimer(){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  clearInterval(state.timerHandle);
+  const q = currentQuestion();
+  if(!q) return;
+  const fullSeconds = contest.timePerQuestion || 600;
+  if(!state.questionTimeLeft) state.questionTimeLeft = {};
+  // resume from wherever this question's clock was left, don't reset it just
+  // because the student revisited it (only start fresh the first time).
+  if(state.questionTimeLeft[q.id] === undefined){
+    state.questionTimeLeft[q.id] = fullSeconds;
+  }
+  state.timerSeconds = state.questionTimeLeft[q.id];
+  state.questionStartedAt = Date.now();
+
+  // a question whose clock already hit 0 on an earlier visit stays frozen at
+  // 0:00 — no more counting down, no forced auto-navigation, so the student
+  // can still look back at what they wrote without getting bounced around.
+  if(state.timerSeconds <= 0){
+    state.timerSeconds = 0;
+    updateTimerDisplay();
+    render();
+    return;
+  }
+
+  state.timerHandle = setInterval(()=>{
+    state.timerSeconds--;
+    state.questionTimeLeft[q.id] = state.timerSeconds;
+    if(state.timerSeconds <= 0){
+      clearInterval(state.timerHandle);
+      state.questionTimeLeft[q.id] = 0;
+      toast('Time up!', 'Auto-submitting this question…', 'warn');
+      goToNextOrSubmit(true);
+      return;
+    }
+    updateTimerDisplay();
+  }, 1000);
+  render();
+}
+
+function updateTimerDisplay(){
+  const box = document.getElementById('timerBox');
+  if(!box) return;
+  const m = Math.floor(state.timerSeconds/60).toString().padStart(2,'0');
+  const s = (state.timerSeconds%60).toString().padStart(2,'0');
+  box.textContent = m+':'+s;
+  box.classList.toggle('warn', state.timerSeconds <= 60);
+}
+
+function startBlindMode(){
+  setState({blindActive:true});
+  toast('Blind Mode ON', 'The editor is now hidden. Keep typing — your code is still saved.', 'warn');
+}
+
+function requestShowCode(){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  if(!contest.allowShowCode){
+    toast('Not allowed', 'The organizer has disabled Show Code for this contest.', 'warn');
+    return;
+  }
+  setState({showCodeUnlocked:true});
+}
+function hideCodeAgain(){
+  setState({showCodeUnlocked:false});
+}
+
+function onCodeInput(val){
+  const q = currentQuestion();
+  if(!q) return;
+  state.answers[q.id] = val;
+}
+
+function registerWarning(kind){
+  state.warnings[kind] = (state.warnings[kind]||0) + 1;
+  const total = totalWarnings();
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  toast('WARNING!', labelForWarning(kind) + ' — Warning ' + total + '/3', 'warn');
+  if(contest.autoDisqualifyOnWarnings && total >= 3){
+    toast('Disqualified', 'Too many integrity warnings.', 'warn');
+  }
+  render();
+}
+function labelForWarning(kind){
+  return {
+    tabSwitches:'You left the coding window.',
+    blurCount:'You switched away from this window.',
+    fullscreenExits:'You exited fullscreen mode.',
+    copy:'Copy detected.',
+    paste:'Paste detected.',
+    cut:'Cut detected.'
+  }[kind] || 'Suspicious activity detected.';
+}
+function totalWarnings(){
+  const w = state.warnings;
+  return (w.tabSwitches||0)+(w.blurCount||0)+(w.fullscreenExits||0)+(w.copy||0)+(w.paste||0)+(w.cut||0);
+}
+
+function goToQuestion(index){
+  if(index < 0 || index >= state.contestQuestions.length) return;
+  setState({currentQuestionIndex:index});
+  beginQuestionTimer();
+}
+
+function submitCurrentQuestion(silent){
+  const q = currentQuestion();
+  if(!q) return;
+  const code = state.answers[q.id] || '';
+  const result = evaluateCode(code, q);
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  const fullSeconds = contest.timePerQuestion || 600;
+  const remaining = (state.questionTimeLeft && state.questionTimeLeft[q.id] !== undefined)
+    ? state.questionTimeLeft[q.id] : state.timerSeconds;
+  // total time actually spent on this question, added up across every visit
+  // (not just since the most recent one), since the clock only ever pauses
+  // and resumes rather than resetting.
+  const timeTaken = Math.max(0, fullSeconds - remaining);
+
+  saveSubmission({
+    studentId: state.currentStudent.id,
+    studentName: state.currentStudent.name,
+    studentRoll: state.currentStudent.roll,
+    questionId: q.id,
+    questionTitle: q.title,
+    code,
+    ...result,
+    timeTaken,
+    warnings: totalWarnings(),
+    submittedAt: Date.now()
+  });
+
+  state.qStatus[q.id] = 'done';
+  if(!silent) toast('Question submitted', q.title + ' — ' + result.score + '/' + result.maxMarks, 'good');
+}
+
+function goToNextOrSubmit(auto){
+  submitCurrentQuestion(auto);
+  clearInterval(state.timerHandle);
+  const isLast = state.currentQuestionIndex >= state.contestQuestions.length - 1;
+  if(isLast){
+    finishContest();
+  } else {
+    goToQuestion(state.currentQuestionIndex + 1);
+  }
+}
+
+function goToPrevious(){
+  if(state.currentQuestionIndex === 0) return;
+  goToQuestion(state.currentQuestionIndex - 1);
+}
+
+function saveSubmission(sub){
+  const all = dbGet(DB_KEYS.submissions, []);
+  // replace existing submission for same student+question if present
+  const idx = all.findIndex(s => s.studentId===sub.studentId && s.questionId===sub.questionId);
+  if(idx >= 0) all[idx] = sub; else all.push(sub);
+  dbSet(DB_KEYS.submissions, all);
+  cloudPushSubmission(sub);
+}
+
+function finishContest(){
+  clearInterval(state.timerHandle);
+
+  // lock this Roll No. out of re-attempting the contest
+  const students = dbGet(DB_KEYS.students, []);
+  const idx = students.findIndex(s => s.id === state.currentStudent.id);
+  if(idx >= 0){
+    students[idx] = {...students[idx], completed:true, completedAt:Date.now()};
+    dbSet(DB_KEYS.students, students);
+    cloudPushStudent(students[idx]);
+    state.currentStudent = students[idx];
+  }
+
+  const all = dbGet(DB_KEYS.submissions, []);
+  const mine = all.filter(s => s.studentId === state.currentStudent.id);
+  const total = mine.reduce((sum,s)=>sum+s.score,0);
+  const maxTotal = mine.reduce((sum,s)=>sum+s.maxMarks,0);
+  const totalTime = mine.reduce((sum,s)=>sum+s.timeTaken,0);
+  state.lastResult = {
+    student: state.currentStudent,
+    submissions: mine,
+    total, maxTotal, totalTime,
+    warnings: totalWarnings()
+  };
+  setState({view:'result'});
+}
+
+// Used by the Result screen's "Return to Home" and the "My Codes" screen's
+// "Return to Home" — both send the student back to the student login page,
+// with a clean session so nothing from the finished attempt lingers.
+function returnToStudentLogin(){
+  clearInterval(state.timerHandle);
+  setState({
+    view:'studentJoin',
+    currentStudent:null,
+    contestQuestions:[],
+    currentQuestionIndex:0,
+    answers:{},
+    qStatus:{},
+    questionTimeLeft:{},
+    warnings:{tabSwitches:0, blurCount:0, fullscreenExits:0, copy:0, paste:0, cut:0},
+    blindActive:false,
+    showCodeUnlocked:false,
+    lastResult:null
+  });
+}
+
+/* ================================================================
+   8. ANTI-CHEATING TRACKING
+   ================================================================ */
+let cheatListenersAttached = false;
+function attachAntiCheatListeners(){
+  if(cheatListenersAttached) return;
+  cheatListenersAttached = true;
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(state.view === 'contest' && document.hidden){
+      registerWarning('tabSwitches');
+    }
+  });
+  window.addEventListener('blur', ()=>{
+    if(state.view === 'contest'){
+      registerWarning('blurCount');
+    }
+  });
+  document.addEventListener('fullscreenchange', ()=>{
+    if(state.view === 'contest' && !document.fullscreenElement){
+      registerWarning('fullscreenExits');
+    }
+  });
+  document.addEventListener('copy', (e)=>{
+    if(state.view === 'contest' && e.target && e.target.id === 'codeArea'){
+      registerWarning('copy');
+    }
+  });
+  document.addEventListener('paste', (e)=>{
+    if(state.view === 'contest' && e.target && e.target.id === 'codeArea'){
+      registerWarning('paste');
+    }
+  });
+  document.addEventListener('cut', (e)=>{
+    if(state.view === 'contest' && e.target && e.target.id === 'codeArea'){
+      registerWarning('cut');
+    }
+  });
+}
+attachAntiCheatListeners();
+
+/* ================================================================
+   9. ADMIN — QUESTIONS / SETTINGS / RESET / CSV
+   ================================================================ */
+function addOrUpdateQuestion(data){
+  const questions = dbGet(DB_KEYS.questions, []);
+  let saved;
+  if(data.id){
+    const idx = questions.findIndex(q=>q.id===data.id);
+    if(idx>=0) questions[idx] = Object.assign({}, questions[idx], data);
+    saved = questions[idx>=0?idx:questions.length-1];
+  } else {
+    data.id = uid('q');
+    data.order = questions.length + 1;
+    questions.push(data);
+    saved = data;
+    const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+    if(!contest.questionIds.includes(data.id)){
+      contest.questionIds.push(data.id);
+      dbSet(DB_KEYS.contest, contest);
+      cloudPushContest(contest);
+    }
+  }
+  dbSet(DB_KEYS.questions, questions);
+  cloudPushQuestion(saved);
+}
+function deleteQuestion(id){
+  let questions = dbGet(DB_KEYS.questions, []);
+  questions = questions.filter(q=>q.id!==id);
+  dbSet(DB_KEYS.questions, questions);
+  cloudDeleteQuestion(id);
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  contest.questionIds = contest.questionIds.filter(qid=>qid!==id);
+  dbSet(DB_KEYS.contest, contest);
+  cloudPushContest(contest);
+}
+
+function deleteStudent(id){
+  // remove the student
+  let students = dbGet(DB_KEYS.students, []);
+  students = students.filter(s=>s.id!==id);
+  dbSet(DB_KEYS.students, students);
+  cloudDeleteStudent(id);
+
+  // remove every submission that belongs to this student
+  let submissions = dbGet(DB_KEYS.submissions, []);
+  const theirs = submissions.filter(s=>s.studentId===id);
+  submissions = submissions.filter(s=>s.studentId!==id);
+  dbSet(DB_KEYS.submissions, submissions);
+  theirs.forEach(s=>cloudDeleteSubmission(s.studentId, s.questionId));
+
+  toast('Student removed', 'The student and their submissions were deleted.', 'good');
+}
+
+async function resetEventData(){
+  localStorage.removeItem(DB_KEYS.questions);
+  localStorage.removeItem(DB_KEYS.contest);
+  localStorage.removeItem(DB_KEYS.students);
+  localStorage.removeItem(DB_KEYS.submissions);
+  seedIfEmpty();
+  if(cloudEnabled){
+    await cloudResetAll();
+    DEFAULT_QUESTIONS.forEach(cloudPushQuestion);
+    cloudPushContest(DEFAULT_CONTEST);
+  }
+  toast('Event reset', 'All students, submissions and scores were cleared.', 'good');
+}
+
+function exportCSV(){
+  const students = dbGet(DB_KEYS.students, []);
+  const submissions = dbGet(DB_KEYS.submissions, []);
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  const qIds = contest.questionIds;
+
+  const header = ['Student Name','Roll Number', ...qIds.map((_,i)=>'Q'+(i+1)), 'Total Score','Warnings'];
+  const rows = [header];
+
+  students.forEach(stu=>{
+    const subs = submissions.filter(s=>s.studentId===stu.id);
+    if(subs.length===0) return;
+    const perQ = qIds.map(qid=>{
+      const s = subs.find(x=>x.questionId===qid);
+      return s ? s.score : '';
+    });
+    const total = subs.reduce((sum,s)=>sum+s.score,0);
+    const warn = subs.length ? Math.max(...subs.map(s=>s.warnings||0)) : 0;
+    rows.push([stu.name, stu.roll, ...perQ, total, warn]);
+  });
+
+  const csv = rows.map(r => r.map(cell=>{
+    const str = String(cell ?? '');
+    return /[",\n]/.test(str) ? '"' + str.replace(/"/g,'""') + '"' : str;
+  }).join(',')).join('\n');
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'blindcode-arena-results.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exported', 'blindcode-arena-results.csv downloaded', 'good');
+}
+
+/* ================================================================
+   10. LEADERBOARD
+   ================================================================ */
+function computeLeaderboard(){
+  const students = dbGet(DB_KEYS.students, []);
+  const submissions = dbGet(DB_KEYS.submissions, []);
+  const rows = students.map(stu=>{
+    const subs = submissions.filter(s=>s.studentId===stu.id);
+    const score = subs.reduce((sum,s)=>sum+s.score,0);
+    const maxScore = subs.reduce((sum,s)=>sum+s.maxMarks,0);
+    const time = subs.reduce((sum,s)=>sum+s.timeTaken,0);
+    const warnings = subs.length ? Math.max(...subs.map(s=>s.warnings||0)) : 0;
+    return {
+      student:stu, score, maxScore, completed:subs.length, time, warnings
+    };
+  }).filter(r=>r.completed>0);
+
+  rows.sort((a,b)=>{
+    if(b.score !== a.score) return b.score - a.score;
+    return a.time - b.time;
+  });
+  return rows;
+}
+
+/* ================================================================
+   11. RENDER — VIEW FUNCTIONS
+   ================================================================ */
+const app = document.getElementById('app');
+
+function render(){
+  let html = '';
+  switch(state.view){
+    case 'home': html = viewHome(); break;
+    case 'adminLogin': html = viewAdminLogin(); break;
+    case 'adminPanel': html = viewAdminPanel(); break;
+    case 'studentJoin': html = viewStudentJoin(); break;
+    case 'contestIntro': html = viewContestIntro(); break;
+    case 'countdown': html = viewCountdown(); break;
+    case 'contest': html = viewContest(); break;
+    case 'result': html = viewResult(); break;
+    case 'myCodes': html = viewMyCodes(); break;
+    default: html = viewHome();
+  }
+  app.innerHTML = html;
+  afterRender();
+}
+
+function fmtTime(sec){
+  const m = Math.floor(sec/60).toString().padStart(2,'0');
+  const s = Math.floor(sec%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+function fmtDiff(d){
+  return {Easy:'pill-easy', Medium:'pill-medium', Hard:'pill-hard'}[d] || 'pill-medium';
+}
+
+/* ---- HOME ---- */
+function viewHome(){
+  return `
+  <div class="home">
+    <div class="home-mark">DACOE INTERNAL COLLEGE EVENT</div>
+    <h1>BlindCode<br><span>Arena</span></h1>
+    <p class="tagline">College Blind Coding Challenge</p>
+    <p class="sub">Type C code from memory while the editor stays hidden.
+    No peeking, no autocomplete crutches — just logic, syntax and nerve.</p>
+    <div class="home-mascot">
+      <div class="sticker">🙈</div>
+      <div class="sticker-caption">"I promise I'm not peeking"</div>
+    </div>
+    <div class="home-actions">
+      <button class="btn btn-primary" onclick="setState({view:'adminLogin'})">🛠 Admin Login</button>
+      <button class="btn btn-outline" onclick="setState({view:'studentJoin'})">🎓 Student Join</button>
+    </div>
+    <div class="home-foot"></div>
+  </div>`;
+}
+
+/* ---- ADMIN LOGIN ---- */
+function viewAdminLogin(){
+  return `
+  <div class="center-wrap">
+    <div class="auth-card">
+      <a class="back" href="javascript:void(0)" onclick="setState({view:'home'})">← Back</a>
+      <div class="auth-head">
+        <div class="icon">🛠</div>
+        <h2>Admin Login</h2>
+        <p>Sign in to manage the event</p>
+      </div>
+      <form onsubmit="event.preventDefault(); handleAdminLoginSubmit();">
+        <div class="field">
+          <label>Username</label>
+          <input id="adminUser" type="text" placeholder="Enter username" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="adminPass" type="password" placeholder="••••••••" autocomplete="off">
+        </div>
+        <div class="error-text" id="adminLoginError"></div>
+        <button type="submit" class="btn btn-primary btn-block">LOGIN</button>
+      </form>
+    </div>
+  </div>`;
+}
+function handleAdminLoginSubmit(){
+  const u = document.getElementById('adminUser').value.trim();
+  const p = document.getElementById('adminPass').value;
+  const ok = loginAdmin(u,p);
+  if(!ok){
+    document.getElementById('adminLoginError').textContent = 'Invalid username or password.';
+  }
+}
+
+/* ---- ADMIN PANEL ---- */
+function viewAdminPanel(){
+  if(!isAdminLoggedIn()){
+    return viewAdminLogin();
+  }
+  const tabs = [
+    ['dashboard','📊','Dashboard'],
+    ['questions','📝','Questions'],
+    ['students','🎓','Students'],
+    ['submissions','📥','Submissions'],
+    ['leaderboard','🏆','Leaderboard'],
+    ['settings','⚙️','Settings']
+  ];
+  const navHtml = tabs.map(([key,icon,label])=>`
+    <button class="nav-item ${state.adminTab===key?'active':''}" onclick="setState({adminTab:'${key}'})">
+      <span>${icon}</span><span>${label}</span>
+    </button>`).join('');
+
+  let content = '';
+  if(state.adminTab==='dashboard') content = adminDashboardTab();
+  else if(state.adminTab==='questions') content = adminQuestionsTab();
+  else if(state.adminTab==='students') content = adminStudentsTab();
+  else if(state.adminTab==='submissions') content = adminSubmissionsTab();
+  else if(state.adminTab==='leaderboard') content = adminLeaderboardTab();
+  else if(state.adminTab==='settings') content = adminSettingsTab();
+
+  return `
+  <div class="admin-shell">
+    <div class="sidebar">
+      <div class="brand"><span class="dot"></span> BlindCode Arena</div>
+      ${navHtml}
+      <div class="sidebar-foot">
+        <button class="nav-item" onclick="logoutAdmin()"><span>🚪</span><span>Log out</span></button>
+      </div>
+    </div>
+    <div class="main">${content}</div>
+  </div>`;
+}
+
+function adminDashboardTab(){
+  const students = dbGet(DB_KEYS.students, []);
+  const questions = dbGet(DB_KEYS.questions, []);
+  const submissions = dbGet(DB_KEYS.submissions, []);
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  const avg = submissions.length ? (submissions.reduce((s,x)=>s+x.score,0)/submissions.length).toFixed(1) : '0.0';
+
+  const cloudBanner = cloudEnabled
+    ? `<div class="blind-banner" style="background:rgba(74,222,128,.08);border-color:#2c4a2f;color:var(--green);">☁ Cloud sync is ON — every student's data is stored centrally and survives refreshes, reboots and different laptops.</div>`
+    : `<div class="blind-banner">⚠ Cloud sync is OFF — running in local-only mode (this browser only). Data will not be shared across student devices and may be lost if this browser's site data is cleared. See the setup steps in the FIREBASE_CONFIG comment near the top of the code to enable it.</div>`;
+
+  return `
+  <div class="page-head">
+    <div><h1>Dashboard</h1><p>Live overview of ${escapeHtml(contest.name)}</p></div>
+  </div>
+  ${cloudBanner}
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Total Students</div><div class="value">${students.length}</div></div>
+    <div class="stat-card"><div class="label">Active Contest</div><div class="value amber">${contest.active?'YES':'NO'}</div></div>
+    <div class="stat-card"><div class="label">Total Questions</div><div class="value">${questions.length}</div></div>
+    <div class="stat-card"><div class="label">Submissions</div><div class="value cyan">${submissions.length}</div></div>
+    <div class="stat-card"><div class="label">Average Score</div><div class="value">${avg}</div></div>
+  </div>
+  <div class="panel-card">
+    <h3>Contest Code</h3>
+    <p class="desc">Share this with students to let them join.</p>
+    <div class="mono" style="font-size:22px;color:var(--amber);letter-spacing:2px;">${escapeHtml(contest.code)}</div>
+  </div>`;
+}
+
+function adminQuestionsTab(){
+  const questions = dbGet(DB_KEYS.questions, []).sort((a,b)=>a.order-b.order);
+  const editing = state.editingQuestionId ? questions.find(q=>q.id===state.editingQuestionId) : null;
+
+  const list = questions.map(q => `
+    <div class="q-item">
+      <div>
+        <div class="qtitle">${q.order}. ${escapeHtml(q.title)} <span class="pill ${fmtDiff(q.difficulty)}">${q.difficulty}</span></div>
+        <div class="qmeta">${escapeHtml(q.description)}</div>
+        <div class="chk-tags">${(q.requiredKeywords||[]).map(k=>`<span class="chk-tag">${escapeHtml(k)}</span>`).join('')}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button class="btn btn-outline btn-sm" onclick="setState({editingQuestionId:'${q.id}'})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('Delete this question?')){deleteQuestion('${q.id}'); render();}">Delete</button>
+      </div>
+    </div>`).join('') || '<div class="empty-state">No questions yet — add one below.</div>';
+
+  return `
+  <div class="page-head">
+    <div><h1>Questions</h1><p>Manage the C programming question bank</p></div>
+  </div>
+  <div class="panel-card">
+    <h3>Question Bank (${questions.length})</h3>
+    ${list}
+  </div>
+  <div class="panel-card">
+    <h3>${editing?'Edit Question':'Add New Question'}</h3>
+    <p class="desc">Set required keywords exactly as they should appear in a correct solution.</p>
+    <div class="form-row">
+      <div class="field"><label>Question Title</label><input id="qfTitle" value="${editing?escapeHtml(editing.title):''}" placeholder="e.g. Armstrong Number"></div>
+      <div class="field"><label>Difficulty</label>
+        <select id="qfDifficulty">
+          <option ${editing&&editing.difficulty==='Easy'?'selected':''}>Easy</option>
+          <option ${editing&&editing.difficulty==='Medium'?'selected':''}>Medium</option>
+          <option ${editing&&editing.difficulty==='Hard'?'selected':''}>Hard</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Question Description</label><textarea id="qfDesc" rows="3" placeholder="Full problem statement shown to students">${editing?escapeHtml(editing.description):''}</textarea></div>
+    <div class="form-row">
+      <div class="field"><label>Maximum Marks</label><input id="qfMarks" type="number" value="${editing?editing.maxMarks:20}"></div>
+      <div class="field"><label>Required Keywords (comma-separated)</label><input id="qfKeywords" value="${editing?escapeHtml((editing.requiredKeywords||[]).join(', ')):'#include, main, scanf, if, printf'}"></div>
+    </div>
+    <div class="field"><label>Expected Logic (shown to admins only)</label><input id="qfLogic" value="${editing?escapeHtml(editing.expectedLogic||''):''}" placeholder="e.g. Use modulus operator (%) to check divisibility"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="submitQuestionForm()">${editing?'Save Changes':'Add Question'}</button>
+      ${editing?'<button class="btn btn-ghost" onclick="setState({editingQuestionId:null})">Cancel</button>':''}
+    </div>
+  </div>`;
+}
+function submitQuestionForm(){
+  const title = document.getElementById('qfTitle').value.trim();
+  const desc = document.getElementById('qfDesc').value.trim();
+  const marks = parseInt(document.getElementById('qfMarks').value,10) || 20;
+  const difficulty = document.getElementById('qfDifficulty').value;
+  const keywords = document.getElementById('qfKeywords').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const logic = document.getElementById('qfLogic').value.trim();
+  if(!title || !desc){ toast('Missing fields','Title and description are required','warn'); return; }
+  addOrUpdateQuestion({
+    id: state.editingQuestionId || null,
+    title, description:desc, maxMarks:marks, difficulty,
+    requiredKeywords:keywords, expectedLogic:logic,
+    type: state.editingQuestionId ? undefined : 'generic'
+  });
+  toast('Saved', title + ' was saved to the question bank', 'good');
+  setState({editingQuestionId:null});
+}
+
+function adminStudentsTab(){
+  const students = dbGet(DB_KEYS.students, []);
+  const submissions = dbGet(DB_KEYS.submissions, []);
+  const rows = students.map(stu=>{
+    const subs = submissions.filter(s=>s.studentId===stu.id);
+    const total = subs.reduce((s,x)=>s+x.score,0);
+    const warn = subs.length ? Math.max(...subs.map(s=>s.warnings||0)) : 0;
+    return `<tr>
+      <td>${escapeHtml(stu.name)}</td>
+      <td class="mono">${escapeHtml(stu.roll)}</td>
+      <td class="mono">${subs.length}/${dbGet(DB_KEYS.contest,DEFAULT_CONTEST).questionIds.length}</td>
+      <td class="mono">${total}</td>
+      <td class="mono" style="color:${warn>=3?'var(--red)':warn>0?'var(--amber)':'var(--text-dim)'}">${warn}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="if(confirm('Delete ${escapeHtml(stu.name)} (Roll ${escapeHtml(stu.roll)})? This also removes their submissions and cannot be undone.')){deleteStudent('${stu.id}'); render();}">Delete</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6"><div class="empty-state">No students have joined yet.</div></td></tr>`;
+
+  return `
+  <div class="page-head"><div><h1>Students</h1><p>Everyone who has joined the contest</p></div></div>
+  <div class="panel-card">
+    <div class="table-wrap">
+      <table><thead><tr><th>Name</th><th>Roll No</th><th>Questions Done</th><th>Total Score</th><th>Warnings</th><th>Action</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>
+  </div>`;
+}
+
+function adminSubmissionsTab(){
+  const students = dbGet(DB_KEYS.students, []);
+  const submissions = dbGet(DB_KEYS.submissions, []);
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+
+  const blocks = students.map(stu=>{
+    const subs = submissions.filter(s=>s.studentId===stu.id);
+    if(subs.length===0) return '';
+    const total = subs.reduce((s,x)=>s+x.score,0);
+    const maxTotal = subs.reduce((s,x)=>s+x.maxMarks,0);
+    const qRows = subs.sort((a,b)=>a.questionId.localeCompare(b.questionId)).map((s,i)=>`
+      <tr>
+        <td>${escapeHtml(s.questionTitle)}</td>
+        <td class="mono">${s.score}/${s.maxMarks}</td>
+        <td><span class="pill ${s.status==='Accepted'?'pill-ok':s.status.includes('Partial')?'pill-warn':'pill-bad'}">${escapeHtml(s.status)}</span></td>
+        <td class="mono">${fmtTime(s.timeTaken)}</td>
+      </tr>`).join('');
+    return `
+    <div class="panel-card">
+      <h3>${escapeHtml(stu.name)} <span class="text-dim mono" style="font-size:12px;">#${escapeHtml(stu.roll)}</span></h3>
+      <p class="desc">Total: <b style="color:var(--amber)">${total}/${maxTotal}</b></p>
+      <div class="table-wrap"><table><thead><tr><th>Question</th><th>Score</th><th>Status</th><th>Time</th></tr></thead><tbody>${qRows}</tbody></table></div>
+    </div>`;
+  }).join('') || '<div class="panel-card"><div class="empty-state">No submissions yet.</div></div>';
+
+  return `
+  <div class="page-head">
+    <div><h1>Submissions</h1><p>Question-wise breakdown per student</p></div>
+    <button class="btn btn-primary" onclick="exportCSV()">⬇ Download Results CSV</button>
+  </div>
+  ${blocks}`;
+}
+
+function adminLeaderboardTab(){
+  const rows = computeLeaderboard();
+  const body = rows.map((r,i)=>{
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    return `<tr>
+      <td class="mono ${rankClass}">#${i+1}</td>
+      <td>${escapeHtml(r.student.name)}</td>
+      <td class="mono">${escapeHtml(r.student.roll)}</td>
+      <td class="mono" style="color:var(--amber)">${r.score}/${r.maxScore}</td>
+      <td class="mono">${r.completed}</td>
+      <td class="mono">${fmtTime(r.time)}</td>
+      <td class="mono" style="color:${r.warnings>=3?'var(--red)':'var(--text-dim)'}">${r.warnings}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7"><div class="empty-state">Leaderboard will populate as students submit.</div></td></tr>`;
+
+  return `
+  <div class="page-head"><div><h1>Leaderboard</h1><p>Auto-generated from submissions — ranked by score, then time</p></div></div>
+  <div class="panel-card">
+    <div class="table-wrap">
+      <table><thead><tr><th>Rank</th><th>Student</th><th>Roll No</th><th>Score</th><th>Q's Done</th><th>Time</th><th>Warnings</th></tr></thead>
+      <tbody>${body}</tbody></table>
+    </div>
+  </div>`;
+}
+
+function adminSettingsTab(){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  return `
+  <div class="page-head"><div><h1>Settings</h1><p>Contest configuration</p></div></div>
+  <div class="panel-card">
+    <h3>Contest</h3>
+    <div class="form-row">
+      <div class="field"><label>Contest Code</label><input id="setCode" value="${escapeHtml(contest.code)}"></div>
+      <div class="field"><label>Time per Question (seconds)</label><input id="setTime" type="number" value="${contest.timePerQuestion}"></div>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="setBlind" ${contest.blindMode?'checked':''} style="width:auto;margin-right:8px;">Blind Mode enabled by default</label>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="setShow" ${contest.allowShowCode?'checked':''} style="width:auto;margin-right:8px;">Allow students to reveal their code (Show Code button)</label>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="setActive" ${contest.active?'checked':''} style="width:auto;margin-right:8px;">Contest active (students can join)</label>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="setDisq" ${contest.autoDisqualifyOnWarnings?'checked':''} style="width:auto;margin-right:8px;">Auto-flag students after 3 warnings</label>
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div class="panel-card">
+    <h3>Danger Zone</h3>
+    <p class="desc">Permanently clear all students, submissions, scores and warnings for this event.</p>
+    <button class="btn btn-danger" onclick="setState({showResetModal:true})">Reset Event Data</button>
+  </div>
+  ${state.showResetModal ? resetModal() : ''}`;
+}
+function saveSettings(){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  contest.code = document.getElementById('setCode').value.trim() || contest.code;
+  contest.timePerQuestion = parseInt(document.getElementById('setTime').value,10) || 600;
+  contest.blindMode = document.getElementById('setBlind').checked;
+  contest.allowShowCode = document.getElementById('setShow').checked;
+  contest.active = document.getElementById('setActive').checked;
+  contest.autoDisqualifyOnWarnings = document.getElementById('setDisq').checked;
+  dbSet(DB_KEYS.contest, contest);
+  cloudPushContest(contest);
+  toast('Settings saved', 'Contest configuration updated', 'good');
+  render();
+}
+function resetModal(){
+  return `
+  <div class="modal-bg">
+    <div class="modal">
+      <h3>Reset all event data?</h3>
+      <p>This will permanently delete every student, submission, score and warning. Questions and settings will be restored to defaults. This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="setState({showResetModal:false})">Cancel</button>
+        <button class="btn btn-danger" onclick="resetEventData(); setState({showResetModal:false});">Yes, reset everything</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- STUDENT JOIN ---- */
+function viewStudentJoin(){
+  return `
+  <div class="center-wrap">
+    <div class="auth-card join-wrap">
+      <a class="back" href="javascript:void(0)" onclick="setState({view:'home'})">← Back</a>
+      <div class="auth-head">
+        <div class="icon">🎓</div>
+        <h2>Join the Contest</h2>
+        <p>Enter your details to begin</p>
+      </div>
+      <form onsubmit="event.preventDefault(); handleJoinSubmit();">
+        <div class="field"><label>Student Name</label><input id="joinName" placeholder="e.g. Rahul Patil"></div>
+        <div class="field"><label>Roll Number</label><input id="joinRoll" placeholder="e.g. 25"></div>
+        <div class="field"><label>Contest Code</label><input id="joinCode" placeholder="e.g. BC2026" style="text-transform:uppercase;"></div>
+        <div class="error-text" id="joinError"></div>
+        <button type="submit" class="btn btn-cyan btn-block">JOIN CONTEST</button>
+      </form>
+      <div class="auth-hint">Demo contest code: <b>BC2026</b></div>
+    </div>
+  </div>`;
+}
+function handleJoinSubmit(){
+  const name = document.getElementById('joinName').value;
+  const roll = document.getElementById('joinRoll').value;
+  const code = document.getElementById('joinCode').value;
+  const res = joinContest(name, roll, code);
+  if(!res.ok){
+    document.getElementById('joinError').textContent = res.error;
+  }
+}
+
+/* ---- CONTEST INTRO ---- */
+function viewContestIntro(){
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+  const s = state.currentStudent;
+  return `
+  <div class="center-wrap">
+    <div class="intro-card">
+      <div class="badge">CONTEST CODE ${escapeHtml(contest.code)}</div>
+      <h2>Ready, ${escapeHtml(s.name.split(' ')[0])}?</h2>
+      <p class="text-dim">You're about to start the Blind Coding Challenge.</p>
+      <div class="intro-list">
+        <div><b>Questions:</b> ${state.contestQuestions.length}</div>
+        <div><b>Time per question:</b> ${Math.round(contest.timePerQuestion/60)} minutes</div>
+        <div><b>Blind Mode:</b> ${contest.blindMode ? 'ON — editor will be hidden' : 'OFF'}</div>
+        <div><b>Show Code:</b> ${contest.allowShowCode ? 'Allowed' : 'Not allowed during the round'}</div>
+        <div><b>Integrity tracking:</b> tab switches, window focus, copy/paste</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:16px;" onclick="startContest()">START BLIND MODE →</button>
+    </div>
+  </div>`;
+}
+
+/* ---- COUNTDOWN ---- */
+function viewCountdown(){
+  return `
+  <div class="countdown-wrap">
+    <div class="countdown-num" id="countdownNum">3</div>
+    <div class="countdown-label">BLIND MODE ACTIVATING</div>
+  </div>`;
+}
+
+/* ---- CONTEST WORKSPACE ---- */
+function viewContest(){
+  const q = currentQuestion();
+  if(!q) return viewHome();
+  const s = state.currentStudent;
+  const idx = state.currentQuestionIndex;
+  const total = state.contestQuestions.length;
+  const code = state.answers[q.id] || '';
+  const lineCount = Math.max(14, code.split('\n').length + 2);
+  const gutter = Array.from({length:lineCount}, (_,i)=>i+1).join('\n');
+  const isLast = idx === total - 1;
+  const warnTotal = totalWarnings();
+  const contest = dbGet(DB_KEYS.contest, DEFAULT_CONTEST);
+
+  const dots = state.contestQuestions.map((qq,i)=>{
+    const done = state.qStatus[qq.id]==='done';
+    const cur = i===idx;
+    return `<div class="progress-dot ${done?'done':''} ${cur?'current':''}">Q${i+1} ${done?'✓':(cur?'●':'-')}</div>`;
+  }).join('');
+
+  return `
+  <div class="contest-shell">
+    <div class="cw-top">
+      <div class="who">BLIND CODING CHALLENGE &nbsp;·&nbsp; <b>${escapeHtml(s.name)}</b> &nbsp;·&nbsp; Roll <b>${escapeHtml(s.roll)}</b></div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        ${warnTotal>0?`<span class="mono" style="color:var(--red);font-size:12.5px;">⚠ ${warnTotal}/3 warnings</span>`:''}
+        <div id="timerBox" class="timer-box">${fmtTime(state.timerSeconds)}</div>
+      </div>
+    </div>
+    <div class="progress-strip">${dots}</div>
+    <div class="cw-body">
+      <div class="q-pane">
+        <div class="qnum">QUESTION ${idx+1} OF ${total}</div>
+        <h2>${escapeHtml(q.title)} <span class="pill ${fmtDiff(q.difficulty)}">${q.difficulty}</span></h2>
+        <div class="q-marks">Maximum marks: <b>${q.maxMarks}</b></div>
+        <div class="q-desc">${escapeHtml(q.description)}</div>
+        ${state.blindActive ? `
+        <div class="blind-banner">
+          🙈 <span>Blind Mode is active — your source code is hidden while you type. It is never lost.</span>
+        </div>` : ''}
+        <div class="text-dim" style="font-size:12.5px;">Write your solution in C. Use standard <span class="mono">#include</span>, <span class="mono">main()</span>, <span class="mono">scanf</span> / <span class="mono">printf</span> as needed.</div>
+      </div>
+      <div class="editor-pane">
+        <div class="editor-toolbar">
+          <div class="text-dim" style="font-size:12.5px;">C EDITOR ${state.blindActive?'· HIDDEN':''}</div>
+          ${contest.allowShowCode ? (state.showCodeUnlocked
+            ? `<button class="btn btn-ghost btn-sm" onclick="hideCodeAgain()">Hide again</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="requestShowCode()">SHOW CODE</button>`) : ''}
+        </div>
+        <div class="code-frame">
+          <div class="line-gutter">${gutter}</div>
+          <textarea id="codeArea" spellcheck="false" placeholder="Start typing your C program..."
+            oninput="onCodeInput(this.value); syncGutter();"
+            onkeydown="handleEditorTab(event)">${escapeHtml(code)}</textarea>
+          ${(state.blindActive && !state.showCodeUnlocked) ? `
+          <div class="blind-overlay">
+            <div class="eye">🙈</div>
+            <p>Editor hidden by Blind Mode.<br>Keep typing — every keystroke is still being saved.</p>
+          </div>` : ''}
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-outline btn-sm" onclick="goToPrevious()" ${idx===0?'disabled':''}>← Previous</button>
+          <div class="spacer"></div>
+          ${isLast
+            ? `<button class="btn btn-primary" onclick="goToNextOrSubmit(false)">Submit Contest ✓</button>`
+            : `<button class="btn btn-primary" onclick="goToNextOrSubmit(false)">Next →</button>`}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function handleEditorTab(e){
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const ta = e.target;
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.substring(0,start) + '    ' + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + 4;
+    onCodeInput(ta.value);
+    syncGutter();
+  }
+}
+function syncGutter(){
+  const ta = document.getElementById('codeArea');
+  const gutter = document.querySelector('.line-gutter');
+  if(!ta || !gutter) return;
+  const lines = Math.max(14, ta.value.split('\n').length + 2);
+  gutter.textContent = Array.from({length:lines}, (_,i)=>i+1).join('\n');
+}
+
+/* ---- RESULT ---- */
+function viewResult(){
+  const r = state.lastResult;
+  if(!r) return viewHome();
+  const allFeedback = r.submissions.flatMap(s=>s.feedback.map(f=>({...f, q:s.questionTitle})));
+  const worstStatus = r.submissions.length ? r.submissions[r.submissions.length-1].status : '';
+
+  const qList = r.submissions.map(s=>`
+    <div class="q-item">
+      <div><div class="qtitle">${escapeHtml(s.questionTitle)}</div>
+      <div class="qmeta">${escapeHtml(s.status)} · ${fmtTime(s.timeTaken)}</div></div>
+      <div class="mono" style="font-weight:700;color:var(--amber);">${s.score}/${s.maxMarks}</div>
+    </div>`).join('');
+
+  const feedbackHtml = allFeedback.slice(0,10).map(f=>`<div class="${f.ok?'ok':'no'}">${f.ok?'✓':'✗'} ${escapeHtml(f.label)}</div>`).join('');
+
+  return `
+  <div class="center-wrap">
+    <div class="result-wrap">
+      <div class="result-card">
+        <div class="text-dim mono" style="font-size:12px;letter-spacing:2px;">SUBMISSION COMPLETE</div>
+        <div style="margin-top:14px;color:var(--text-dim);font-size:14px;">${escapeHtml(r.student.name)} · Roll ${escapeHtml(r.student.roll)}</div>
+        <div class="result-score">${r.total}<span> / ${r.maxTotal}</span></div>
+        <div class="result-grid">
+          <div class="rg-item"><div class="rv">${r.submissions.length}</div><div class="rl">Questions Completed</div></div>
+          <div class="rg-item"><div class="rv">${fmtTime(r.totalTime)}</div><div class="rl">Time Taken</div></div>
+          <div class="rg-item"><div class="rv" style="color:${r.warnings>=3?'var(--red)':'var(--text)'}">${r.warnings}</div><div class="rl">Warnings</div></div>
+        </div>
+        <div class="feedback-list">${feedbackHtml}</div>
+        <div class="panel-card" style="text-align:left;">
+          <h3>Question-wise Score</h3>
+          ${qList}
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="returnToStudentLogin()">Return to Home</button>
+          <button class="btn btn-primary" onclick="setState({view:'myCodes'})">Show My Codes</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- MY CODES (read-only review of the student's own submitted code) ---- */
+function viewMyCodes(){
+  const r = state.lastResult;
+  if(!r) return viewHome();
+
+  const blocks = r.submissions.map((s,i)=>{
+    const code = s.code || '';
+    const lineCount = Math.max(6, code.split('\n').length);
+    const gutter = Array.from({length:lineCount}, (_,n)=>n+1).join('\n');
+    return `
+    <div class="panel-card" style="text-align:left;">
+      <h3>Q${i+1}. ${escapeHtml(s.questionTitle)} <span class="text-dim" style="font-size:12.5px;font-weight:400;">(${s.score}/${s.maxMarks})</span></h3>
+      <div class="code-frame" style="pointer-events:none;">
+        <div class="line-gutter">${gutter}</div>
+        <textarea class="code-view-area" readonly spellcheck="false">${escapeHtml(code)}</textarea>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="center-wrap">
+    <div class="result-wrap" style="max-width:820px;">
+      <div class="result-card" style="text-align:left;">
+        <div class="text-dim mono" style="font-size:12px;letter-spacing:2px;text-align:center;">MY SUBMITTED CODE</div>
+        <div style="margin-top:14px;color:var(--text-dim);font-size:14px;text-align:center;">${escapeHtml(r.student.name)} · Roll ${escapeHtml(r.student.roll)}</div>
+        ${blocks || `<div class="empty-state">No code was submitted.</div>`}
+        <div style="display:flex;justify-content:center;margin-top:10px;">
+          <button class="btn btn-outline" onclick="returnToStudentLogin()">Return to Home</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ================================================================
+   12. POST-RENDER HOOKS
+   ================================================================ */
+function afterRender(){
+  if(state.view==='contest'){
+    updateTimerDisplay();
+    const ta = document.getElementById('codeArea');
+    if(ta){ ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
+  }
+}
+
+/* ================================================================
+   13. INIT
+   ================================================================ */
+window.addEventListener('beforeunload', (e)=>{
+  if(state.view === 'contest'){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+try{ history.replaceState({view:'home'}, '', '#home'); }catch(e){}
+render();
+</script>
+</body>
+</html>
